@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.utils import get_url
 from frappe.integrations.utils import create_request_log
 from awesome_cart.compat.customer import get_current_customer
 from awesome_cart.session import get_awc_session
@@ -17,29 +18,33 @@ def get_checkout_data():
 	customer = get_current_customer()
 	full_name = customer.customer_name
 
-	#Dirty Hack
-	#Affirm needs Full Name to have atleast 2 words
-	if len(full_name.split())==1:
+	# Dirty Hack
+	# Affirm needs Full Name to have atleast 2 words
+	if len(full_name.split()) == 1:
 		full_name = full_name + " ."
 
 	awc_session = get_awc_session()
 	cart_info = get_user_quotation(awc_session)
 	quotation = cart_info.get('doc')
-	items=[]
+
+	items = []
 	shipping_address = awc_session.get("shipping_address")
+	shipping_fee = awc_session.get("shipping_method").get("fee")
+
 	for item in quotation.items:
 		items.append({
 			"display_name": item.item_name,
 			"sku": item.item_code,
-			"unit_price": item.rate * 100,
+			"unit_price": convert_to_cents(item.rate),
 			"qty": item.qty,
-			"item_image_url": "https://jhaudio.com" + item.get("image", ""),
-			"item_url": "https://jhaudio.com/"
+			"item_image_url": get_url() + item.get("image", ""),
+			"item_url": get_url()
 		})
+
 	checkout_data = {
 		"merchant": {
-			"user_confirmation_url": "https://estus.serveo.net/affirm_checkout",
-			"user_cancel_url": "https://jhaudio.com/cart",
+			"user_confirmation_url": get_url() + "/affirm_success",
+			"user_cancel_url": get_url() + "/cart",
 			"user_confirmation_url_action": "POST",
 			"name": "JH Audio"
 		},
@@ -57,12 +62,10 @@ def get_checkout_data():
 			}
 		},
 		"items": items,
-
 		"order_id": quotation.name,
-
-		"shipping_amount": awc_session.get("shipping_method").get("fee")  * 100,
-		"tax_amount": 0,
-		"total": awc_session.get("cart").get("totals").get("grand_total")  * 100,
+		"shipping_amount": convert_to_cents(shipping_fee),
+		"tax_amount": convert_to_cents(quotation.total_taxes_and_charges - shipping_fee),
+		"total": convert_to_cents(quotation.grand_total),
 		"reference_doctype": "Quotation",
 		"reference_docname": quotation.name
 	}
@@ -73,3 +76,6 @@ def get_checkout_data():
 		"script_url": script_url,
 		"checkout_data": checkout_data
 	}
+
+def convert_to_cents(amount):
+	return amount * 100

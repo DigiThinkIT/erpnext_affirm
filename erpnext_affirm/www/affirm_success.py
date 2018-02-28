@@ -27,3 +27,4 @@ def get_context(context):
 
 	frappe.local.response["type"] = "redirect"
 	frappe.local.response["location"] = get_url(redirect_url)
+	raise frappe.Redirect
