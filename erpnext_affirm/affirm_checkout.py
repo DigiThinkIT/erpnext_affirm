@@ -45,7 +45,7 @@ def get_checkout_data():
 		"merchant": {
 			"user_confirmation_url": get_url() + "/affirm_success",
 			"user_cancel_url": get_url() + "/cart",
-			"user_confirmation_url_action": "POST",
+			"user_confirmation_url_action": "GET",
 			"name": "JH Audio"
 		},
 		"shipping": {
