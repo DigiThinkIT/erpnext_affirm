@@ -1,4 +1,30 @@
-<h2>Please wait while we redirect you to Affirm...</h2>
+<div class="affirm-container">
+    <h1>Please wait while we redirect you to Affirm <span class="loader__dot">.</span><span class="loader__dot">.</span><span class="loader__dot">.</span></h1>
+</div>
+<style>
+    @keyframes blink {
+        50% {
+            color: transparent
+        }
+    }
+    
+    .loader__dot {
+        animation: 1s blink infinite
+    }
+    
+    .loader__dot:nth-child(2) {
+        animation-delay: 250ms
+    }
+    
+    .loader__dot:nth-child(3) {
+        animation-delay: 500ms
+    }
+    
+    .affirm-container {
+        margin: 50px auto;
+        width: 50%;
+    }
+</style>
 <script type="text/javascript" src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
 <script type="text/javascript" src="/assets/js/frappe-web.min.js"></script>
 <script type="text/javascript" src="/assets/erpnext_affirm/js/affirm.js"></script>
