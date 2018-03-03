@@ -55,7 +55,6 @@ from frappe.integrations.utils import create_payment_gateway, create_request_log
 from six.moves.urllib.parse import urlencode
 
 from requests.auth import HTTPBasicAuth
-from erpnext.selling.doctype.quotation.quotation import _make_sales_order
 
 class AffirmSettings(Document):
 	service_name = "Affirm"
@@ -68,7 +67,7 @@ class AffirmSettings(Document):
 		return get_url("./integrations/affirm_checkout?{0}".format(urlencode(kwargs)))
 
 
-	def is_available(self, context={}, is_backend=0):
+	def is_available(self, context=None, is_backend=0):
 		'''AWC Specific API contract'''
 
 		# never available to backend

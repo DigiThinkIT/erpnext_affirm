@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt, cint
+from frappe.utils import flt
 from erpnext_affirm.erpnext_affirm_integration.doctype.affirm_settings.affirm_settings import build_checkout_data, get_api_config
-import json
 
 no_cache = 1
 no_sitemap = 1
