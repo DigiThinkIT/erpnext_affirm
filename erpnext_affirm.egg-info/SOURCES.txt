@@ -4,6 +4,7 @@ license.txt
 requirements.txt
 setup.py
 erpnext_affirm/__init__.py
+erpnext_affirm/affirm_checkout.py
 erpnext_affirm/hooks.py
 erpnext_affirm/modules.txt
 erpnext_affirm/patches.txt
@@ -17,5 +18,17 @@ erpnext_affirm/config/__init__.py
 erpnext_affirm/config/desktop.py
 erpnext_affirm/config/docs.py
 erpnext_affirm/erpnext_affirm_integration/__init__.py
+erpnext_affirm/erpnext_affirm_integration/doctype/__init__.py
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/__init__.py
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/affirm_settings.js
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/affirm_settings.json
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/affirm_settings.py
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/test_affirm_settings.js
+erpnext_affirm/erpnext_affirm_integration/doctype/affirm_settings/test_affirm_settings.py
+erpnext_affirm/public/js/affirm.js
 erpnext_affirm/templates/__init__.py
 erpnext_affirm/templates/pages/__init__.py
+erpnext_affirm/www/__init__.py
+erpnext_affirm/www/affirm.html
+erpnext_affirm/www/affirm_success.html
+erpnext_affirm/www/affirm_success.py
