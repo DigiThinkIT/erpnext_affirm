@@ -118,11 +118,19 @@ def affirm_callback(checkout_token, reference_doctype, reference_docname):
 	frappe.local.response["type"] = "redirect"
 	frappe.local.response["location"] = get_url(redirect_url)
 
+@frappe.whitelist(allow_guest=1)
+def get_public_config():
+	config = get_api_config()
+	del config['private_api_key'];
+
+	return config
+
 def get_api_config():
 	settings = frappe.get_doc("Affirm Settings", "Affirm Settings")
 	values = dict(
 		public_api_key = settings.public_api_key,
-		private_api_key = settings.private_api_key
+		private_api_key = settings.private_api_key,
+		promo_code = settings.promo_code
 	)
 	if settings.is_sandbox:
 		values.update(dict(
