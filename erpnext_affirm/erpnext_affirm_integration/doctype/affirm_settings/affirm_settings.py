@@ -203,10 +203,7 @@ def build_checkout_data(**kwargs):
 		"order_id": order_doc.name,
 		"shipping_amount": convert_to_cents(shipping_fee),
 		"tax_amount": convert_to_cents(order_doc.total_taxes_and_charges - shipping_fee),
-		"total": convert_to_cents(order_doc.grand_total),
-		"metadata": {
-			"shipping_type":        "UPS Ground"
-		}
+		"total": convert_to_cents(order_doc.grand_total)
 	}
 
 	create_request_log(checkout_data, "Host", "Affirm")
