@@ -10,3 +10,7 @@ app_icon = "octicon octicon-radio-tower"
 app_color = "light blue"
 app_email = "neil@digithinkit.com"
 app_license = "GPL"
+
+web_include_css = [
+	"/assets/erpnext_affirm/css/awc_checkout.css?v=%s" % app_version
+]
