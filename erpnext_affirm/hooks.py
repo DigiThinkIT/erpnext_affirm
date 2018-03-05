@@ -10,3 +10,7 @@ app_icon = "octicon octicon-radio-tower"
 app_color = "light blue"
 app_email = "neil@digithinkit.com"
 app_license = "GPL"
+
+doctype_js = {
+	"Sales Order": "public/js/capture_affirm_payment.js"
+}
