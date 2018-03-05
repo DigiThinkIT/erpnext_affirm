@@ -14,3 +14,7 @@ app_license = "GPL"
 web_include_css = [
 	"/assets/erpnext_affirm/css/awc_checkout.css?v=%s" % app_version
 ]
+
+doctype_js = {
+	"Sales Order": "public/js/capture_affirm_payment.js"
+}

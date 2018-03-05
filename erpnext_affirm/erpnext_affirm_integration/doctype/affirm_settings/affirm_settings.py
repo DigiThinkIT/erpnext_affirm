@@ -50,11 +50,12 @@ import frappe
 import requests
 
 from frappe.model.document import Document
-from frappe.utils import get_url, call_hook_method, cint
+from frappe.utils import get_url, call_hook_method, cint, getdate
 from frappe.integrations.utils import create_payment_gateway, create_request_log
 from six.moves.urllib.parse import urlencode
 
 from requests.auth import HTTPBasicAuth
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 class AffirmSettings(Document):
 	service_name = "Affirm"
@@ -89,15 +90,12 @@ def affirm_callback(checkout_token, reference_doctype, reference_docname):
 	affirm_data = authorization_response.json()
 
 	if affirm_data:
-
 		charge_id = affirm_data.get('id')
 
-		# check if callback alreaady happened
-		if affirm_data.get("status_code") == 400 and \
-			affirm_data.get("code") == "checkout-token-used":
+		# check if callback already happened
+		if affirm_data.get("status_code") == 400 and affirm_data.get("code") == "checkout-token-used":
 			charge_id = affirm_data.get('charge_id')
 			redirect_url = '/integrations/payment-success'
-
 		else:
 			pr = frappe.get_doc(reference_doctype, reference_docname)
 
@@ -132,6 +130,7 @@ def get_api_config():
 		private_api_key = settings.private_api_key,
 		promo_code = settings.promo_code
 	)
+
 	if settings.is_sandbox:
 		values.update(dict(
 			checkout_url = settings.sandbox_checkout_url,
@@ -140,7 +139,7 @@ def get_api_config():
 	else:
 		values.update(dict(
 			checkout_url = settings.live_checkout_url,
-			api_url = settings.live_api_urls
+			api_url = settings.live_api_url
 		))
 
 	return values
@@ -154,7 +153,7 @@ def build_checkout_data(**kwargs):
 	if len(full_name.split()) == 1:
 		full_name = full_name + " ."
 
-	# Pick up reference doc from paymet request.
+	# Pick up reference doc from payment request.
 	# This is usually the payment request it self.
 	# On awc its the awc transction proxy to the request.
 	ref_doc = frappe.get_doc(kwargs['reference_doctype'], kwargs['reference_docname'])
@@ -211,14 +210,30 @@ def build_checkout_data(**kwargs):
 		"order_id": order_doc.name,
 		"shipping_amount": convert_to_cents(shipping_fee),
 		"tax_amount": convert_to_cents(order_doc.total_taxes_and_charges - shipping_fee),
-		"total": convert_to_cents(order_doc.grand_total),
-		"metadata": {
-			"shipping_type":        "UPS Ground"
-		}
+		"total": convert_to_cents(order_doc.grand_total)
 	}
 
 	create_request_log(checkout_data, "Host", "Affirm")
 	return checkout_data
+
+@frappe.whitelist()
+def capture_payment(affirm_id, sales_order):
+	affirm_settings = get_api_config()
+	authorization_response = requests.post(
+		"{0}/charges/{1}/capture".format(affirm_settings.get("api_url"), affirm_id),
+		auth=HTTPBasicAuth(
+			affirm_settings.get('public_api_key'),
+			affirm_settings.get('private_api_key')),
+		)
+	if authorization_response.status_code==200:
+		affirm_data = authorization_response.json()
+		#make payment entry agianst Sales Order
+		payment_entry = get_payment_entry(dt="Sales Order", dn=sales_order, bank_amount=affirm_data.get("amount"))
+		payment_entry.reference_no = affirm_data.get("transaction_id")
+		payment_entry.reference_date = getdate(affirm_data.get("created"))
+		payment_entry.submit()
+	else:
+		frappe.throw("Something went wrong.")
 
 def convert_to_cents(amount):
 	return cint(amount * 100)
