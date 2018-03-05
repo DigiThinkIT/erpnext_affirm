@@ -132,7 +132,7 @@ def get_api_config():
 	else:
 		values.update(dict(
 			checkout_url = settings.live_checkout_url,
-			api_url = settings.live_api_urls
+			api_url = settings.live_api_url
 		))
 
 	return values
@@ -146,7 +146,7 @@ def build_checkout_data(**kwargs):
 	if len(full_name.split()) == 1:
 		full_name = full_name + " ."
 
-	# Pick up reference doc from paymet request.
+	# Pick up reference doc from payment request.
 	# This is usually the payment request it self.
 	# On awc its the awc transction proxy to the request.
 	ref_doc = frappe.get_doc(kwargs['reference_doctype'], kwargs['reference_docname'])
