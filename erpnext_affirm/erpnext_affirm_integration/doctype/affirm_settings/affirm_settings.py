@@ -162,6 +162,7 @@ def build_checkout_data(**kwargs):
 	order_doc = frappe.get_doc(ref_doc.reference_doctype, kwargs["order_id"])
 
 	items = []
+	discounts = {}
 	shipping_address = frappe.get_doc("Address", order_doc.shipping_address_name)
 
 	# deduce shipping from taxes table
@@ -179,6 +180,12 @@ def build_checkout_data(**kwargs):
 			"item_image_url": get_url(item.get("image", "")),
 			"item_url": get_url()
 		})
+
+	if order_doc.coupon_code:
+		discounts[order_doc.coupon_code] = {
+				"discount_amount": order_doc.discount_amount,
+				"discount_display_name": order_doc.coupon_code
+			}
 
 	checkout_data = {
 		"merchant": {
@@ -207,12 +214,12 @@ def build_checkout_data(**kwargs):
 			}
 		},
 		"items": items,
+		"discounts": discounts,
 		"order_id": order_doc.name,
 		"shipping_amount": convert_to_cents(shipping_fee),
 		"tax_amount": convert_to_cents(order_doc.total_taxes_and_charges - shipping_fee),
 		"total": convert_to_cents(order_doc.grand_total)
 	}
-
 	create_request_log(checkout_data, "Host", "Affirm")
 	return checkout_data
 
