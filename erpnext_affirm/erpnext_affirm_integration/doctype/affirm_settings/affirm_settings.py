@@ -163,7 +163,12 @@ def build_checkout_data(**kwargs):
 
 	items = []
 	discounts = {}
-	shipping_address = frappe.get_doc("Address", order_doc.shipping_address_name)
+	shipping_address = None
+
+	if ref_doc.shipping_address:
+		shipping_address = frappe.get_doc("Address", ref_doc.shipping_address)
+	else:
+		shipping_address = frappe.get_doc("Address", ref_doc.billing_address)
 
 	# deduce shipping from taxes table
 	shipping_fee = 0
