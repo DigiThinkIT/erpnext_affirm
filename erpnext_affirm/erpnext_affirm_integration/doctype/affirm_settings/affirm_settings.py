@@ -163,12 +163,17 @@ def build_checkout_data(**kwargs):
 
 	items = []
 	discounts = {}
+	billing_address = None
 	shipping_address = None
 
-	if ref_doc.shipping_address:
-		shipping_address = frappe.get_doc("Address", ref_doc.shipping_address)
-	else:
-		shipping_address = frappe.get_doc("Address", ref_doc.billing_address)
+	if order_doc.get("customer_address"):
+		billing_address = frappe.get_doc("Address", order_doc.customer_address)
+
+	if order_doc.get("shipping_address_name"):
+		shipping_address = frappe.get_doc("Address", order_doc.shipping_address_name)
+
+	if not shipping_address:
+		shipping_address = frappe.get_doc("Address", frappe.get_value("Affirm Settings", "Affirm Settings", "pickup_address"))
 
 	# deduce shipping from taxes table
 	shipping_fee = 0
@@ -205,7 +210,31 @@ def build_checkout_data(**kwargs):
 			"user_confirmation_url_action": "GET",
 			"name": "JH Audio"
 		},
-		"shipping": {
+		"items": items,
+		"discounts": discounts,
+		"order_id": order_doc.name,
+		"shipping_amount": convert_to_cents(shipping_fee),
+		"tax_amount": convert_to_cents(order_doc.total_taxes_and_charges - shipping_fee),
+		"total": convert_to_cents(order_doc.grand_total)
+	}
+
+	if billing_address:
+		checkout_data['billing'] = {
+			"name": {
+				"full": full_name
+			},
+			"address": {
+				"line1": billing_address.get("address_line1"),
+				"line2": billing_address.get("address_line2"),
+				"city": billing_address.get("city"),
+				"state": billing_address.get("state"),
+				"zipcode": billing_address.get("pincode"),
+				"country": billing_address.get("country")
+			}
+		}
+
+	if shipping_address:
+		checkout_data['shipping'] = {
 			"name": {
 				"full": full_name
 			},
@@ -217,14 +246,8 @@ def build_checkout_data(**kwargs):
 				"zipcode": shipping_address.get("pincode"),
 				"country": shipping_address.get("country")
 			}
-		},
-		"items": items,
-		"discounts": discounts,
-		"order_id": order_doc.name,
-		"shipping_amount": convert_to_cents(shipping_fee),
-		"tax_amount": convert_to_cents(order_doc.total_taxes_and_charges - shipping_fee),
-		"total": convert_to_cents(order_doc.grand_total)
-	}
+		}
+
 	create_request_log(checkout_data, "Host", "Affirm")
 	return checkout_data
 
