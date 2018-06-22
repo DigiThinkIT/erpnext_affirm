@@ -1,0 +1,9 @@
+{
+    "js/affirm_gateway_embed.js": [
+        "public/js/gateway/affirm_gateway_summary.html",
+        "public/js/gateway/embed.js"
+    ],
+    "css/affirm_gateway_embed.css": [
+        "public/css/affirm_gateway_embed.css"
+    ]
+}
