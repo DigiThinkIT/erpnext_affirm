@@ -59,6 +59,7 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 
 class AffirmSettings(Document):
 	service_name = "Affirm"
+	is_embedable = True
 
 	def validate(self):
 		create_payment_gateway("Affirm")
@@ -73,6 +74,14 @@ class AffirmSettings(Document):
 
 		# never available to backend
 		return not is_backend
+
+	def get_embed_form(self, context=None):
+		return {
+			"form": "<div class=\"checkout-affirm-redirect-message\">You will be redirected to Affirm on checkout.</div>",
+			"style_url": "/assets/css/affirm_gateway_embed.css",
+			"script_url": "/assets/js/affirm_gateway_embed.js"
+		}
+
 
 @frappe.whitelist(allow_guest=1)
 def affirm_callback(checkout_token, reference_doctype, reference_docname):
