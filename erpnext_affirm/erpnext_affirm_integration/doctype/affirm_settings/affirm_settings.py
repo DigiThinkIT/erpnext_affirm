@@ -48,6 +48,7 @@ Example:
 from __future__ import unicode_literals
 import frappe
 import requests
+import json
 
 from frappe.model.document import Document
 from frappe.utils import get_url, call_hook_method, cint, getdate
@@ -86,6 +87,12 @@ class AffirmSettings(Document):
 @frappe.whitelist(allow_guest=1)
 def affirm_callback(checkout_token, reference_doctype, reference_docname):
 
+	frappe.log("""[AFFIRM] Affirm callback request: 
+		checkout_token: {0}
+		reference_doctype: {1}
+		reference_docname: {2}
+	""".format(checkout_token, reference_doctype, reference_docname))
+
 	affirm_settings = get_api_config()
 	redirect_url = "/integrations/payment-failed"
 
@@ -97,17 +104,24 @@ def affirm_callback(checkout_token, reference_doctype, reference_docname):
 		json={"checkout_token": checkout_token})
 
 	affirm_data = authorization_response.json()
+	frappe.log("	Response: {}".format(json.dumps(affirm_data)))
 
 	if affirm_data:
 		charge_id = affirm_data.get('id')
 
 		# check if callback already happened
 		if affirm_data.get("status_code") == 400 and affirm_data.get("code") == "checkout-token-used":
+			frappe.log("	SUCCESS via checkout-token-used")
 			charge_id = affirm_data.get('charge_id')
 			redirect_url = '/integrations/payment-success'
+		elif affirm_data.get("status_code") == 400 and affirm_data.get("type") == "invalid_request":
+			frappe.log_error("	ERROR: {}".format(affirm_data.get("message")))
+			frappe.msgprint(affirm_data.get("message"))
+			redirect_url = "/cart"
 		else:
 			pr = frappe.get_doc(reference_doctype, reference_docname)
 
+			frappe.log("	Updating Sales Order {}".format(affirm_data.get('order_id')))
 			order_doc = frappe.get_doc(pr.reference_doctype, affirm_data.get('order_id'))
 			order_doc.affirm_id = charge_id
 			order_doc.flags.ignore_permissions = 1
@@ -121,9 +135,12 @@ def affirm_callback(checkout_token, reference_doctype, reference_docname):
 			frappe.db.commit()
 
 			redirect_url = '/integrations/payment-success'
-
 	frappe.local.response["type"] = "redirect"
 	frappe.local.response["location"] = get_url(redirect_url)
+
+	frappe.log("	Redirect: {}".format(frappe.local.response["location"]))
+
+	return ""
 
 @frappe.whitelist(allow_guest=1)
 def get_public_config():
