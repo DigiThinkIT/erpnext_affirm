@@ -207,11 +207,21 @@ def build_checkout_data(**kwargs):
 		if 'shipping ' in tax.description.lower():
 			shipping_fee = tax.tax_amount
 
-	for item in order_doc.items:
+	for idx, item in enumerate(order_doc.items):
+		item_discount = item.price_list_rate - item.rate
+
+		if item_discount > 0:
+			discount_percent = 100 - (item.rate * 100 / item.price_list_rate)
+			discount_code = "LINE {} | {} | {}% DISCOUNT ($ -{:,.2f})".format(idx, item.item_code, discount_percent, item_discount)
+			discounts[discount_code] = {
+				"discount_amount": convert_to_cents(item_discount),
+				"discount_display_name": discount_code
+			}
+
 		items.append({
 			"display_name": item.item_name,
 			"sku": item.item_code,
-			"unit_price": convert_to_cents(item.rate),
+			"unit_price": convert_to_cents(item.price_list_rate),
 			"qty": item.qty,
 			"item_image_url": get_url(item.get("image", "")),
 			"item_url": get_url()
@@ -219,9 +229,9 @@ def build_checkout_data(**kwargs):
 
 	if order_doc.coupon_code:
 		discounts[order_doc.coupon_code] = {
-				"discount_amount": order_doc.discount_amount,
-				"discount_display_name": order_doc.coupon_code
-			}
+			"discount_amount": convert_to_cents(order_doc.discount_amount),
+			"discount_display_name": "Coupon Code {}".format(order_doc.coupon_code)
+		}
 
 	checkout_data = {
 		"merchant": {
